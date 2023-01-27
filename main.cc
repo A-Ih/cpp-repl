@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <memory>
+#include <cstring>
 
 
 template<typename F>
@@ -21,17 +22,16 @@ int main() {
   });
   std::clog << "loaded module" << std::endl;
 
-  std::string arg1 = "12";
-  std::string arg2 = "42";
   call_info c = {
     .func_name = "add",
     .argnum = 2,
-    .args = { arg1.c_str(), arg2.c_str() },
+    .args = { "12", "42" },
     .result = { '\0' },
     .is_error = 0,
   };
   int code = loader->make_call(&c);
   std::clog << "made the call" << std::endl;
+  assert(std::strcmp(c.result, "54") == 0);
   switch (code) {
     case SUCCESS:
       std::cout << "Success: " << c.result << std::endl;
