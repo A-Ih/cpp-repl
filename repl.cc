@@ -193,7 +193,7 @@ void LogTime(F f, int repetitions = 1) {
 }
 
 void repl(unique_ptr<module_loader> &loader);
-bool doCommand(operation &op);
+bool doCommand(operation &op, unique_ptr<module_loader> &loader);
 
 int main() {
   auto loader = std::make_unique<module_loader>();
@@ -228,6 +228,7 @@ void repl(unique_ptr<module_loader> &loader) {
   getline(cin, s1, '\n');
 
   while (s1 != END_REPL_INPUT) {
+    cout << "repl> " << flush;
     Parser p = Parser(s1);
     operation op = p.parse();
     doCommand(op, loader);
