@@ -18,7 +18,7 @@ T from_cstring(const char* str) {
   std::stringstream ss;
   ss << str;
   T res;
-  if (!(ss >> res).good()) {
+  if ((ss >> res).fail()) {
     throw std::runtime_error(utils::MakeString() << "Unable to convert string `" << str << "` to " << utils::TypeStr<T>);
   }
   return res;
@@ -49,6 +49,7 @@ std::variant<R, std::string> call(call_info* c, R (*f)(Args...)) {
 }
 
 struct func_container {
+  func_container() = default;
   ~func_container() = default;
 
   template<typename TFuncPtr, typename = std::enable_if_t<std::is_pointer_v<TFuncPtr> && std::is_function_v<std::remove_pointer_t<TFuncPtr>>>>

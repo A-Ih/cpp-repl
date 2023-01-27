@@ -1,6 +1,11 @@
 SRCS=\
-	 caller.cc \
-	 repl.cc
+	 repl.cc \
+	 caller.hh \
+	 defs.h \
+	 glue.cc \
+	 glue.hh \
+	 main.cc \
+	 utils.hh
 
 CC=g++
 CFLAGS=\

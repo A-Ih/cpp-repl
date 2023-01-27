@@ -20,7 +20,7 @@ std::string TEMPLATE = R"(
 std::unique_ptr<func_container> call_site;
 #if defined (__GNUC__)
 void __attribute__((constructor)) my_init(void) {
-  call_site = std::unique_ptr<func_container>();
+  call_site = std::make_unique<func_container>();
   //constructor//
 }
 
@@ -68,10 +68,8 @@ void module_loader::load_modules() {
     includes.append(utils::MyFormat("#include \"%\"\n", name));
     signatures.append(utils::MyFormat("using T%=%;\n", name, signature));
     constructor.append(utils::MyFormat(R"(
-    T% %_ptr = %;
-    assert(%_ptr != nullptr);
-    call_site->addFunc<T%>("%", %_ptr);
-    )", name, name, name, name, name, name, name));
+    call_site->addFunc("%", %);
+    )", name, name));
   }
   auto result = std::regex_replace(TEMPLATE, std::regex("//includes//"), includes);
   result = std::regex_replace(result, std::regex("//signatures//"), signatures);
