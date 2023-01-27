@@ -6,12 +6,20 @@
 #define MAX_ARGS 32
 
 
+// TODO: replace bool with something like int, because bool isn't stable in c
+// and c++ ABI's.
 struct call_info {
-  char* func_name;
+  const char* func_name;
+  int argnum;
+  const char* args[MAX_ARGS];
+  char result[RESULT_SIZE];
+  int is_error;
+};
+
+struct import_info {
   int argnum;
   char* args[MAX_ARGS];
   char result[RESULT_SIZE];
-  bool is_error;
 };
 
 #define SUCCESS 0

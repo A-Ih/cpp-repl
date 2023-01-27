@@ -12,6 +12,9 @@ CFLAGS=\
 caller:
 	$(CC) $(CFLAGS) -fPIC caller.cc -o libcaller.so
 
+test:
+	$(CC) $(CFLAGS) -o main main.cc && ./main
+
 format: FORCE
 	clang-format --verbose -i --style=Google $(SRCS)
 

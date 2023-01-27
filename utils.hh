@@ -2,6 +2,11 @@
 
 #include <sstream>
 #include <string_view>
+#include <chrono>
+#include <vector>
+#include <numeric>
+#include <cassert>
+#include <iostream>
 
 namespace utils {
 template <typename T>
@@ -69,5 +74,34 @@ DECL_TYPESTR(long long)
 DECL_TYPESTR(unsigned long long)
 
 #undef DECL_TYPESTR
+
+struct TimeStat {
+  double avg;
+  double min;
+  double max;
+};
+
+// Measure statistics of execution time of pure procedure (in microseconds)
+template<typename F>
+TimeStat MeasureTime(F f, int repetitions = 10) {
+  assert(repetitions > 0);
+  std::vector<double> times(repetitions);
+  for (int i = 0; i < repetitions; i++) {
+    auto start = std::chrono::high_resolution_clock::now();
+    f();
+    times[i] = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count();
+  }
+  return {
+    .avg = std::accumulate(times.begin(), times.end(), 0.0) / repetitions,
+    .min = *std::min_element(times.begin(), times.end()),
+    .max = *std::max_element(times.begin(), times.end()),
+  };
+}
+
+template<typename F>
+void LogTime(F f, int repetitions = 1) {
+  auto [avg, min, max] = MeasureTime(std::move(f), repetitions);
+  std::cout << utils::MyFormat("% launches: avg=% min=% max=%", repetitions, avg, min, max) << std::endl;
+}
 
 } // namespace utils
