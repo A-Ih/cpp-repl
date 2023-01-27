@@ -6,7 +6,6 @@
 #include <vector>
 #include <numeric>
 #include <cassert>
-#include <iostream>
 
 namespace utils {
 template <typename T>
@@ -96,12 +95,6 @@ TimeStat MeasureTime(F f, int repetitions = 10) {
     .min = *std::min_element(times.begin(), times.end()),
     .max = *std::max_element(times.begin(), times.end()),
   };
-}
-
-template<typename F>
-void LogTime(F f, int repetitions = 1) {
-  auto [avg, min, max] = MeasureTime(std::move(f), repetitions);
-  std::cout << utils::MyFormat("% launches: avg=% min=% max=%", repetitions, avg, min, max) << std::endl;
 }
 
 } // namespace utils

@@ -1,7 +1,7 @@
 SRCS=\
 	 caller.cc
 
-CC=gcc
+CC=g++
 CFLAGS=\
 	   -Wall \
 	   -fsanitize=address,leak,undefined \
@@ -9,11 +9,8 @@ CFLAGS=\
 	   -g \
 	   -std=c++20
 
-caller:
-	$(CC) $(CFLAGS) -fPIC caller.cc -o libcaller.so
-
-test:
-	$(CC) $(CFLAGS) -o main main.cc && ./main
+main: FORCE
+	$(CC) $(CFLAGS) -o main main.cc glue.cc
 
 format: FORCE
 	clang-format --verbose -i --style=Google $(SRCS)

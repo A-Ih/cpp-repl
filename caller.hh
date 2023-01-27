@@ -14,17 +14,14 @@
 #include <memory>
 
 template<typename T>
-T from_cstring(char* str) {
-  if constexpr (std::is_same_v<char*, std::remove_const_t<T>>) {
-    return str;
-  } else {
-    std::stringstream ss;
-    ss << str;
-    T res;
-    if (!(ss >> res).good()) {
-      throw std::runtime_error(utils::MakeString() << "Unable to convert string `" << str << "` to " << utils::TypeStr<T>);
-    }
+T from_cstring(const char* str) {
+  std::stringstream ss;
+  ss << str;
+  T res;
+  if (!(ss >> res).good()) {
+    throw std::runtime_error(utils::MakeString() << "Unable to convert string `" << str << "` to " << utils::TypeStr<T>);
   }
+  return res;
 }
 
 template<typename R, typename ...Args>
@@ -44,7 +41,7 @@ std::variant<R, std::string> call(call_info* c, R (*f)(Args...), std::index_sequ
 }
 
 template<typename T>
-constexpr bool IsGoodArg = std::is_trivial_v<T> && !std::is_const_v<T>;
+constexpr bool IsGoodArg = std::is_trivial_v<T> && !std::is_const_v<T> && !std::is_pointer_v<T>;
 
 template<typename R, typename ...Args, typename = std::enable_if_t<(IsGoodArg<Args> && ...)>>
 std::variant<R, std::string> call(call_info* c, R (*f)(Args...)) {

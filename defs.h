@@ -1,19 +1,15 @@
 #pragma once
 
-#include <sstream>
-
 #define RESULT_SIZE 256
 #define MAX_ARGS 32
 
 
-// TODO: replace bool with something like int, because bool isn't stable in c
-// and c++ ABI's.
 struct call_info {
   const char* func_name;
   int argnum;
   const char* args[MAX_ARGS];
   char result[RESULT_SIZE];
-  int is_error;
+  int is_error;  // this isn't bool because bool is not stable across c and c++ ABI
 };
 
 struct import_info {
