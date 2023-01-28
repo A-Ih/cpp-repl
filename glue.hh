@@ -4,10 +4,11 @@
 
 #include <unordered_map>
 #include <string>
+#include <vector>
 
 struct module_info {
-  std::string name;
-  std::string func_pointer_signature;
+  std::string path;
+  std::vector<std::string> funcs;
 };
 
 struct module_loader {
@@ -25,5 +26,5 @@ private:
 
   void* handle{nullptr};
   TMakeCall f_make_call{nullptr};
-  std::unordered_map<std::string, std::string> loaded;
+  std::unordered_map<std::string, std::vector<std::string>> loaded_modules;
 };
