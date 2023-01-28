@@ -18,7 +18,7 @@ T from_cstring(const char* str) {
   std::stringstream ss;
   ss << str;
   T res;
-  if ((ss >> res).fail()) {
+  if ((ss >> res).fail() || ss.peek() != std::stringstream::traits_type::eof()) {
     throw std::runtime_error(utils::MakeString() << "Unable to convert string `" << str << "` to " << utils::TypeStr<T>);
   }
   return res;
@@ -33,6 +33,9 @@ template<typename R, typename ...Args, std::size_t ...I>
 std::variant<R, std::string> call(call_info* c, R (*f)(Args...), std::index_sequence<I...>) {
   static_assert(sizeof...(Args) == sizeof...(I));
   try {
+    if (c->argnum != sizeof...(Args)) {
+      throw std::runtime_error(utils::MyFormat("arity mismatch: expected %, got %", sizeof...(Args), c->argnum));
+    }
     return f(from_cstring<Args>(c->args[I])...);
   } catch(const std::runtime_error& e) {
     // No matter what exception is caught - we have no result
@@ -46,6 +49,13 @@ constexpr bool IsGoodArg = std::is_trivial_v<T> && !std::is_const_v<T> && !std::
 template<typename R, typename ...Args, typename = std::enable_if_t<(IsGoodArg<Args> && ...)>>
 std::variant<R, std::string> call(call_info* c, R (*f)(Args...)) {
   return call(c, f, get_arity(f));
+}
+
+inline void fill_buffer(char* buf, const int cap, const char* src) {
+  auto src_len = std::strlen(src);
+  auto size = std::min(src_len, std::size_t(cap - 1));
+  std::memcpy(buf, src, size);
+  buf[size] = '\0';
 }
 
 struct func_container {
@@ -75,24 +85,25 @@ struct func_container {
         ss << " has failed with an exception: " << std::get<1>(res) << std::endl;
       }
       auto res_str = ss.str();
-      auto size = std::min(res_str.size(), std::size_t(RESULT_SIZE - 1));
-      std::memcpy(c->result, res_str.data(), size);
-      c->result[size] = '\0';
-      return c->is_error == 0 ? SUCCESS : BAD_FUNC_EVAL;
+      fill_buffer(c->result, RESULT_SIZE, res_str.c_str());
     };
   }
 
-  int make_call(call_info* c) noexcept {
+  void make_call(call_info* c) noexcept {
     if (auto it = funcs.find(c->func_name); it != funcs.end()) {
       auto& [name, f] = *it;
       try {
-        return f(c);
+        f(c);
+        return;
       } catch (...) {
-        return CRITICAL_ERROR;
+        c->is_error = 1;
+        fill_buffer(c->result, RESULT_SIZE, "encountered exception outside of function");
+        return;
       }
     }
-    return BAD_FUNC;
+    c->is_error = 1;
+    fill_buffer(c->result, RESULT_SIZE, "no function with such name is loaded");
   }
 
-  std::unordered_map<std::string, std::function<int(call_info*)>> funcs;
+  std::unordered_map<std::string, std::function<void(call_info*)>> funcs;
 };

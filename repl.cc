@@ -59,7 +59,7 @@ class Lexer {
   string input;
 
   string parseStringToken() {
-    string res = "\"";
+    string res;
     ind++;
 
     for (; ind < input.size() && input[ind] != '\"'; ind++) {
@@ -75,7 +75,6 @@ class Lexer {
     }
 
     if (input[ind] == '\"') {
-      res += '\"';
       ind++;
       return res;
     }
@@ -120,13 +119,11 @@ class Parser {
   operation finishModuleParse(string &firstToken, string errMessage) {
     operation op = operation(firstToken, false);
     vector<string> args;
-    args.push_back(lexer.getNextToken());
-    op.args = args;
-    if (lexer.isInputEnd()) {
-      return op;
+    while (!lexer.isInputEnd()) {
+      args.push_back(lexer.getNextToken());
     }
-
-    return {errMessage};
+    op.args = args;
+    return op;
   }
 
   operation finishLoadModuleParse(string &firstToken) {
@@ -201,7 +198,6 @@ int main() {
   repl(loader);
   //  loader->load_module({
   //                          .name = "add",
-  //                          .func_pointer_signature = "int(*)(int, int)",
   //                      });
   //  std::clog << "loaded module" << std::endl;
   //
@@ -225,13 +221,14 @@ int main() {
 
 void repl(unique_ptr<module_loader> &loader) {
   string s1;
+  cout << "repl> " << flush;
   getline(cin, s1, '\n');
 
   while (s1 != END_REPL_INPUT) {
-    cout << "repl> " << flush;
     Parser p = Parser(s1);
     operation op = p.parse();
     doCommand(op, loader);
+    cout << "repl> " << flush;
     getline(cin, s1, '\n');
   }
 }
@@ -251,25 +248,31 @@ bool doCommand(operation &op, unique_ptr<module_loader> &loader) {
     for (int i = 0; i < op.args.size(); i++) {
       c.args[i] = op.args[i].c_str();
     }
-    int code = loader->make_call(&c);
-    std::clog << "made the call" << std::endl;
-    switch (code) {
-      case SUCCESS:
-        std::cout << "Success: " << c.result << std::endl;
+    loader->make_call(&c);
+    switch (c.is_error) {
+      case 0:
+        std::cout << c.result << std::endl;
         break;
       default:
-        std::cout << utils::MyFormat("Failed with code %, message: %", code,
-                                     c.result)
-                  << std::endl;
+        std::cout << utils::MyFormat("Call failed, message: %", c.result) << std::endl;
     }
   } else {
     if (op.op == LOAD_MODULE_INPUT) {
-      loader->load_module({
-          .name = op.args[0],
-          .func_pointer_signature = op.args[1],
-      });
+      try {
+        loader->load_module({
+            .path = op.args[0],
+            .funcs = std::vector(std::next(op.args.begin()), op.args.end())
+
+        });
+      } catch (std::runtime_error& e) {
+        cout << "Error encountered during load of the module: " << e.what() << endl;
+      }
     } else if (op.op == UNLOAD_MODULE_INPUT) {
-      loader->unload_module(op.args[0]);
+      try {
+        loader->unload_module(op.args[0]);
+      } catch (std::runtime_error& e) {
+        cout << "Error encountered while unloading the module: " << e.what() << endl;
+      }
     }
   }
 

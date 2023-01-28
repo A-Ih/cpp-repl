@@ -6,6 +6,7 @@
 #include <vector>
 #include <numeric>
 #include <cassert>
+#include <algorithm>
 
 namespace utils {
 template <typename T>
@@ -71,6 +72,9 @@ DECL_TYPESTR(long)
 DECL_TYPESTR(unsigned long)
 DECL_TYPESTR(long long)
 DECL_TYPESTR(unsigned long long)
+DECL_TYPESTR(float)
+DECL_TYPESTR(double)
+DECL_TYPESTR(long double)
 
 #undef DECL_TYPESTR
 

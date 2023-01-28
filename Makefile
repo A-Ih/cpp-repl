@@ -14,7 +14,7 @@ CFLAGS=\
 	   -g \
 	   -std=c++20
 
-main: FORCE
+repl: FORCE
 	$(CC) $(CFLAGS) -o repl repl.cc glue.cc
 
 format: FORCE
